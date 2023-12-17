@@ -15,17 +15,8 @@ const CACHE_GUARD_FILE = '.cacheFolder';
 
 export class DataBaseRepository {
   private readonly rootFolderPath: string;
-
   private readonly collectionName: string = 'data';
-
   private readonly dataFolderPath: string;
-
-  static async create({ rootFolderPath, dataFolderName }: { rootFolderPath: string; dataFolderName?: string }) {
-    const repository = new DataBaseRepository({ rootFolderPath, collectionName: dataFolderName });
-    await repository.init();
-    return repository;
-  }
-
   constructor({ rootFolderPath, collectionName }: { rootFolderPath: string; collectionName?: string }) {
     this.rootFolderPath = rootFolderPath;
     if (collectionName) {
@@ -34,13 +25,19 @@ export class DataBaseRepository {
     this.dataFolderPath = path.join(rootFolderPath, this.collectionName);
   }
 
+  static async create({ rootFolderPath, dataFolderName }: { rootFolderPath: string; dataFolderName?: string }) {
+    const repository = new DataBaseRepository({ rootFolderPath, collectionName: dataFolderName });
+    await repository.init();
+    return repository;
+  }
+
   async init() {
     await this.savePrepareDataFolder();
   }
 
-  private isGuardFileExists = async () => {
+  private async isGuardFileExists() {
     return await isFileExists(path.join(this.rootFolderPath, CACHE_GUARD_FILE));
-  };
+  }
 
   private async rootFolderCanBeUsedForCache() {
     const isCacheDirectoryExists = await isDirectoryExists(this.rootFolderPath);

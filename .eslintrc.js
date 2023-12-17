@@ -1,7 +1,7 @@
 module.exports = {
   root: true,
   ignorePatterns: ['node_modules/', 'dist/', 'coverage/', 'cdk.out/'],
-  plugins: ['@typescript-eslint', 'prettier'],
+  plugins: ['@typescript-eslint', 'prettier', 'sort-class-members'],
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 2020,
@@ -54,6 +54,23 @@ module.exports = {
     'import/extensions': 'off',
     'import/no-extraneous-dependencies': 'off',
     'no-use-before-define': 'off',
+    'sort-class-members/sort-class-members': [
+      2,
+      {
+        order: ['[static-properties]', '[properties]', 'constructor', '[static-methods]', '[methods]'],
+        accessorPairPositioning: 'getThenSet',
+      },
+    ],
+    'lines-between-class-members': [
+      'error',
+      {
+        enforce: [
+          { blankLine: 'never', prev: '*', next: 'field' },
+          { blankLine: 'never', prev: 'field', next: '*' },
+          { blankLine: 'always', prev: 'method', next: 'method' },
+        ],
+      },
+    ],
     'no-dupe-class-members': 'off',
     '@typescript-eslint/no-use-before-define': ['error'],
     '@typescript-eslint/no-unused-vars': [
