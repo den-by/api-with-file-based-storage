@@ -24,6 +24,15 @@ suite
     },
     options,
   )
+  .add(
+    'DataBaseRepository.set concurrency',
+    async () => {
+      countFiles += 1;
+      const fileName = 'test';
+      await dataBase.set(fileName, 'test', 0);
+    },
+    options,
+  )
   .on('cycle', async (event: Benchmark.Event) => {
     console.log(String(event.target));
   })
