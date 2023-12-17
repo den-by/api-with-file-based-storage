@@ -4,7 +4,8 @@
   "description": "File-based caching API system that stores and retrieves data from a local file system",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "benchmark": "ts-node benchmarks/benchmark-test.ts"
   },
   "keywords": [
     "typescript",
@@ -14,10 +15,13 @@
   ],
   "author": {
     "name": "Dzianis Buyakou",
-    "email": "dzianis.buyakou@gmail.com",
+    "email": "dzianis.buyakou@gmail.com"
   },
   "license": "MIT",
   "devDependencies": {
+    "@types/benchmark": "^2.1.5",
+    "benchmark": "^2.1.4",
+    "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   }
 }
