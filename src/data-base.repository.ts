@@ -1,50 +1,54 @@
+import path from 'path';
+
 import {
   isDirectoryExists,
   isFileExists,
   mkdirPromise,
-  readdirPromise, readFilePromise,
-  rmDir, unlinkPromise,
-  writeFilePromise
-} from "./utils/file-operations";
-import path from "path";
+  readdirPromise,
+  readFilePromise,
+  rmDir,
+  unlinkPromise,
+  writeFilePromise,
+} from './utils/file-operations';
 
 const CACHE_GUARD_FILE = '.cacheFolder';
 
 export class DataBaseRepository {
   private readonly rootFolderPath: string;
+
   private readonly collectionName: string = 'data';
+
   private readonly dataFolderPath: string;
 
-  static async create({ rootFolderPath, dataFolderName }: { rootFolderPath: string, dataFolderName?: string }) {
+  static async create({ rootFolderPath, dataFolderName }: { rootFolderPath: string; dataFolderName?: string }) {
     const repository = new DataBaseRepository({ rootFolderPath, collectionName: dataFolderName });
     await repository.init();
     return repository;
   }
 
-  constructor({ rootFolderPath, collectionName }: { rootFolderPath: string, collectionName?: string }) {
+  constructor({ rootFolderPath, collectionName }: { rootFolderPath: string; collectionName?: string }) {
     this.rootFolderPath = rootFolderPath;
-    if(collectionName) {
+    if (collectionName) {
       this.collectionName = collectionName;
     }
-    this.dataFolderPath = path.join(rootFolderPath,this.collectionName);
+    this.dataFolderPath = path.join(rootFolderPath, this.collectionName);
   }
 
   async init() {
     await this.savePrepareDataFolder();
   }
 
-
   private isGuardFileExists = async () => {
-    return await isFileExists(path.join(this.rootFolderPath,CACHE_GUARD_FILE));
-  }
+    return await isFileExists(path.join(this.rootFolderPath, CACHE_GUARD_FILE));
+  };
 
   private async rootFolderCanBeUsedForCache() {
     const isCacheDirectoryExists = await isDirectoryExists(this.rootFolderPath);
-    const files = isCacheDirectoryExists && await readdirPromise(this.rootFolderPath) || [];
+    const files = (isCacheDirectoryExists && (await readdirPromise(this.rootFolderPath))) || [];
     const isEmptyDir = isCacheDirectoryExists && files.length === 0;
     const isUsedForCacheBefore = await this.isGuardFileExists();
 
-    return (!isCacheDirectoryExists || isEmptyDir || isUsedForCacheBefore);
+    return !isCacheDirectoryExists || isEmptyDir || isUsedForCacheBefore;
   }
 
   public async clear() {
@@ -52,7 +56,7 @@ export class DataBaseRepository {
   }
 
   private getFilePath(key: string) {
-    return path.join( this.dataFolderPath, `${key}.json`);
+    return path.join(this.dataFolderPath, `${key}.json`);
   }
 
   public async get(key: string) {
@@ -66,7 +70,7 @@ export class DataBaseRepository {
       key,
       value,
       createdAt: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + ttlInMs).toISOString()
+      expiresAt: new Date(Date.now() + ttlInMs).toISOString(),
     });
     await writeFilePromise(this.getFilePath(key), data);
   }
@@ -79,18 +83,21 @@ export class DataBaseRepository {
     const dataDirPath = this.dataFolderPath;
     const isDataDirectoryExists = await isDirectoryExists(dataDirPath);
     const dataFiles = isDataDirectoryExists ? await readdirPromise(dataDirPath) : [];
-    if(isDataDirectoryExists) {
+    if (isDataDirectoryExists) {
       await rmDir(dataDirPath);
     }
     await mkdirPromise(this.dataFolderPath, { recursive: true });
-    dataFiles.length && console.info(`Deleted ${dataFiles.length} files from ${dataDirPath}`)
+    if (dataFiles.length) {
+      console.info(`Deleted ${dataFiles.length} files from ${dataDirPath}`);
+    }
   }
+
   private async savePrepareDataFolder() {
-    let rootFolderCanBeUsedForCache = await this.rootFolderCanBeUsedForCache();
-    if(!rootFolderCanBeUsedForCache) {
+    const rootFolderCanBeUsedForCache = await this.rootFolderCanBeUsedForCache();
+    if (!rootFolderCanBeUsedForCache) {
       throw new Error(`Directory ${this.rootFolderPath} is not empty. Please delete all files from it`);
     }
     await mkdirPromise(this.dataFolderPath, { recursive: true });
-    await writeFilePromise(path.join(this.rootFolderPath,CACHE_GUARD_FILE), 'is database folder', 'utf8');
+    await writeFilePromise(path.join(this.rootFolderPath, CACHE_GUARD_FILE), 'is database folder', 'utf8');
   }
 }

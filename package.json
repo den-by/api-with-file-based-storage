@@ -4,6 +4,8 @@
   "description": "File-based caching API system that stores and retrieves data from a local file system",
   "main": "index.js",
   "scripts": {
+    "lint": "eslint --ext .ts src benchmarks",
+    "lint:fix": "eslint --fix --ext .ts src benchmarks",
     "test": "echo \"Error: no test specified\" && exit 1",
     "benchmark": "ts-node benchmarks/benchmark-test.ts"
   },
@@ -23,7 +25,17 @@
     "@types/node": "^20.10.4",
     "benchmark": "^2.1.4",
     "ts-node": "^10.9.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "eslint": "^8.11.0",
+    "@typescript-eslint/eslint-plugin": "^6.7.2",
+    "@typescript-eslint/parser": "^6.7.2",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-import-resolver-typescript": "^2.5.0",
+    "eslint-plugin-import": "^2.25.4",
+    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-sort-class-members": "^1.15.2",
+    "prettier": "^2.3.2"
   },
   "dependencies": {
     "@types/async-retry": "^1.4.8",
