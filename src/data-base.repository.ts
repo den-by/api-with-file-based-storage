@@ -10,6 +10,8 @@ import {
   unlinkPromise,
   writeFilePromise,
 } from './utils/file-operations';
+import { CacheDataError } from './errors';
+import { logger } from "./utils/logger";
 
 const CACHE_GUARD_FILE = '.cacheFolder';
 
@@ -49,7 +51,12 @@ export class DataBaseRepository {
   }
 
   public async clear() {
-    await this.cleanupDataFolder();
+    try {
+      await this.cleanupDataFolder();
+    } catch (error) {
+      logger.error(`Error while cleaning data folder ${this.dataFolderPath}: ${error}`);
+      throw new CacheDataError(`Error while cleaning data folder ${this.dataFolderPath}: ${error}`);
+    }
   }
 
   private getFilePath(key: string) {
@@ -57,23 +64,47 @@ export class DataBaseRepository {
   }
 
   public async get(key: string) {
-    const data = await readFilePromise(this.getFilePath(key), 'utf8');
-    return JSON.parse(data).value;
+    try {
+      const rawData = await readFilePromise(this.getFilePath(key), 'utf8');
+      if (!rawData) return null;
+      const object = JSON.parse(rawData);
+      if (object.expiresAt && new Date(object.expiresAt) < new Date()) {
+        await this.delete(key);
+        return null;
+      }
+      return object.value;
+    } catch (error) {
+      if (error instanceof Object && 'code' in error && error.code === 'ENOENT') {
+        return null;
+      }
+      logger.error(`Error while reading data from file ${this.getFilePath(key)}: ${error}`);
+      throw new CacheDataError(`Error while reading data from file ${this.getFilePath(key)}: ${error}`);
+    }
   }
 
   public async set(key: string, value: any, ttl: number) {
-    const ttlInMs = ttl * 1000;
-    const data = JSON.stringify({
-      key,
-      value,
-      createdAt: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + ttlInMs).toISOString(),
-    });
-    await writeFilePromise(this.getFilePath(key), data);
+    try {
+      const ttlInMs = ttl * 1000;
+      const data = JSON.stringify({
+        key,
+        value,
+        createdAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + ttlInMs).toISOString(),
+      });
+      await writeFilePromise(this.getFilePath(key), data);
+    } catch (error) {
+      logger.error(`Error while saving data to file ${this.getFilePath(key)}: ${error}`);
+      throw new CacheDataError(`Error while saving data to file ${this.getFilePath(key)}: ${error}`);
+    }
   }
 
   public async delete(key: string) {
-    await unlinkPromise(this.getFilePath(key));
+    try {
+      await unlinkPromise(this.getFilePath(key));
+    } catch (error) {
+      logger.error(`Error while deleting file ${this.getFilePath(key)}: ${error}`);
+      throw new CacheDataError(`Error while deleting file ${this.getFilePath(key)}: ${error}`);
+    }
   }
 
   private async cleanupDataFolder() {
@@ -90,11 +121,16 @@ export class DataBaseRepository {
   }
 
   private async savePrepareDataFolder() {
-    const rootFolderCanBeUsedForCache = await this.rootFolderCanBeUsedForCache();
-    if (!rootFolderCanBeUsedForCache) {
-      throw new Error(`Directory ${this.rootFolderPath} is not empty. Please delete all files from it`);
+    try {
+      const rootFolderCanBeUsedForCache = await this.rootFolderCanBeUsedForCache();
+      if (!rootFolderCanBeUsedForCache) {
+        throw new Error(`Directory ${this.rootFolderPath} is not empty. Please delete all files from it`);
+      }
+      await mkdirPromise(this.dataFolderPath, { recursive: true });
+      await writeFilePromise(path.join(this.rootFolderPath, CACHE_GUARD_FILE), 'is database folder', 'utf8');
+    } catch (error) {
+      logger.error(`Error while saving data folder ${this.dataFolderPath}: ${error}`);
+      throw new CacheDataError(`Error while saving data folder ${this.dataFolderPath}: ${error}`);
     }
-    await mkdirPromise(this.dataFolderPath, { recursive: true });
-    await writeFilePromise(path.join(this.rootFolderPath, CACHE_GUARD_FILE), 'is database folder', 'utf8');
   }
 }
