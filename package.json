@@ -6,6 +6,7 @@
   "scripts": {
     "lint": "eslint --ext .ts src benchmarks",
     "lint:fix": "eslint --fix --ext .ts src benchmarks",
+    "dev": "ts-node src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "benchmark": "ts-node benchmarks/benchmark-test.ts"
   },
@@ -22,9 +23,9 @@
   "license": "MIT",
   "devDependencies": {
     "@faker-js/faker": "^8.3.1",
+    "@types/async-retry": "^1.4.8",
     "@types/benchmark": "^2.1.5",
     "@types/node": "^20.10.4",
-    "@types/async-retry": "^1.4.8",
     "@typescript-eslint/eslint-plugin": "^6.14.0",
     "@typescript-eslint/parser": "^6.14.0",
     "benchmark": "^2.1.4",
@@ -40,7 +41,9 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
+    "apollo-server": "^3.13.0",
     "async-await-queue": "^2.1.4",
-    "async-retry": "^1.3.3"
+    "async-retry": "^1.3.3",
+    "graphql": "^16.8.1"
   }
 }
