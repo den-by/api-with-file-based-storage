@@ -109,6 +109,9 @@ export class DataBaseRepository {
     try {
       await unlinkPromise(this.getFilePath(key));
     } catch (error) {
+      if (error instanceof Object && 'code' in error && error.code === 'ENOENT') {
+        return;
+      }
       logger.error(`Error while deleting file ${this.getFilePath(key)}: ${error}`);
       throw new CacheDataError(`Error while deleting file ${this.getFilePath(key)}: ${error}`);
     }
