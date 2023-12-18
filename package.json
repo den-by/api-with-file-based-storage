@@ -1,5 +1,5 @@
 {
-  "name": "file-based-caching-system",
+  "name": "api-with-file-based-storage",
   "version": "1.0.0",
   "description": "File-based caching API system that stores and retrieves data from a local file system",
   "main": "index.js",
@@ -13,7 +13,7 @@
   "keywords": [
     "typescript",
     "caching",
-    "file-based-caching-system",
+    "file-based-storage",
     "API"
   ],
   "author": {
