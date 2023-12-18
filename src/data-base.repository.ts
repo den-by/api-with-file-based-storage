@@ -72,6 +72,7 @@ export class DataBaseRepository {
   public async get(key: string) {
     try {
       const rawData = await readFilePromise(this.getFilePath(key), 'utf8');
+      if (typeof rawData !== 'string') throw new Error('rawData is not string');
       if (!rawData) return null;
       const object = JSON.parse(rawData);
       if (object.expiresAt && new Date(object.expiresAt) < new Date()) {
@@ -136,7 +137,15 @@ export class DataBaseRepository {
           const filePath = path.join(dataDirPath, file);
           const rawData = await readFilePromise(filePath, 'utf8');
           if (!rawData) continue;
-          const object = JSON.parse(rawData);
+          if (typeof rawData !== 'string') throw new Error('rawData is not string');
+          let object;
+          try {
+            object = JSON.parse(rawData);
+          } catch (error) {
+            logger.error(`Error while parsing file ${file} from ${this.dataFolderPath}: ${error}`);
+            await this.delete(file);
+            continue;
+          }
           if (object.expiresAt && new Date(object.expiresAt) < new Date()) {
             await this.delete(object.key);
           }
@@ -157,7 +166,7 @@ export class DataBaseRepository {
         throw new Error(`Directory ${this.rootFolderPath} is not empty. Please delete all files from it`);
       }
       await mkdirPromise(this.dataFolderPath, { recursive: true });
-      await writeFilePromise(path.join(this.rootFolderPath, CACHE_GUARD_FILE), 'is database folder');
+      await writeFilePromise(path.join(this.rootFolderPath, CACHE_GUARD_FILE), 'is database folder', 'utf8');
     } catch (error) {
       logger.error(`Error while saving data folder ${this.dataFolderPath}: ${error}`);
       throw new CacheDataError(`Error while saving data folder ${this.dataFolderPath}: ${error}`);

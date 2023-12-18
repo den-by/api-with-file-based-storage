@@ -45,7 +45,6 @@ let countFiles = 0;
         const fileName = getRandomFileName();
         await dataBase.set(fileName, getRandomText(), 1000);
         const data = await dataBase.get(fileName);
-        console.log(countFiles, data.substring(0, 5));
       },
       options,
     )
@@ -56,7 +55,6 @@ let countFiles = 0;
         const fileName = 'static';
         await dataBase.set(fileName, getRandomText(), 1000);
         const data = await dataBase.get(fileName);
-        console.log(countFiles, data.substring(0, 5));
       },
       options,
     )

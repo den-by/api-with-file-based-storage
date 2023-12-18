@@ -1,12 +1,36 @@
 import fs from 'fs';
 
-import { retryfy } from './retryfy';
+import { Queue } from 'async-await-queue';
 
-export const writeFilePromise = retryfy(fs.promises.writeFile);
-export const readFilePromise = retryfy(fs.promises.readFile);
-export const unlinkPromise = retryfy(fs.promises.unlink);
-export const readdirPromise = retryfy(fs.promises.readdir);
-export const mkdirPromise = retryfy(fs.promises.mkdir);
+const queues = new Map<string, Queue<any>>();
+const createQueue = () => {
+  return new Queue(1, 0);
+};
+
+const singleFileBlockDecorator = <T>(
+  func: (filePath: string, ...args: any[]) => Promise<T>,
+): ((filePath: string, ...args: any[]) => Promise<T>) => {
+  return async (filePath: string, ...args: any[]): Promise<T> => {
+    const queueExist = queues.has(filePath);
+    if (!queueExist) {
+      const newQueue = createQueue();
+      queues.set(filePath, newQueue);
+    }
+    const queueForFile = queues.get(filePath);
+    if (!queueForFile) throw new Error('Queue not found');
+    const uniq = Symbol('q');
+    await queueForFile.wait(uniq);
+    const data = await func(filePath, ...args);
+    queueForFile.end(uniq);
+    return data;
+  };
+};
+
+export const writeFilePromise = singleFileBlockDecorator(fs.promises.writeFile);
+export const readFilePromise = singleFileBlockDecorator(fs.promises.readFile);
+export const unlinkPromise = singleFileBlockDecorator(fs.promises.unlink);
+export const readdirPromise = fs.promises.readdir;
+export const mkdirPromise = fs.promises.mkdir;
 
 export const isDirectoryExists = async (dir: string): Promise<boolean> => {
   return Boolean(await fs.promises.stat(dir).catch(() => false));
