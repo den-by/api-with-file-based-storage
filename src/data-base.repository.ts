@@ -11,7 +11,7 @@ import {
   writeFilePromise,
 } from './utils/file-operations';
 import { CacheDataError } from './errors';
-import { logger } from "./utils/logger";
+import { logger } from './utils/logger';
 
 const CACHE_GUARD_FILE = '.cacheFolder';
 
@@ -28,13 +28,19 @@ export class DataBaseRepository {
   }
 
   static async create({ rootFolderPath, dataFolderName }: { rootFolderPath: string; dataFolderName?: string }) {
-    const repository = new DataBaseRepository({ rootFolderPath, collectionName: dataFolderName });
-    await repository.init();
-    return repository;
+    try {
+      const repository = new DataBaseRepository({ rootFolderPath, collectionName: dataFolderName });
+      await repository.init();
+      return repository;
+    } catch (error) {
+      logger.error(`Error while creating data base repository: ${error}`);
+      throw new CacheDataError(`Error while creating data base repository: ${error}`);
+    }
   }
 
   async init() {
     await this.savePrepareDataFolder();
+    await this.clearExpired();
   }
 
   private async isGuardFileExists() {
@@ -120,6 +126,30 @@ export class DataBaseRepository {
     }
   }
 
+  private async clearExpired() {
+    try {
+      const dataDirPath = this.dataFolderPath;
+      const isDataDirectoryExists = await isDirectoryExists(dataDirPath);
+      const dataFiles = isDataDirectoryExists ? await readdirPromise(dataDirPath) : [];
+      for (const file of dataFiles) {
+        try {
+          const filePath = path.join(dataDirPath, file);
+          const rawData = await readFilePromise(filePath, 'utf8');
+          if (!rawData) continue;
+          const object = JSON.parse(rawData);
+          if (object.expiresAt && new Date(object.expiresAt) < new Date()) {
+            await this.delete(object.key);
+          }
+        } catch (error) {
+          logger.error(`Error while cleaning file ${file} from ${this.dataFolderPath}: ${error}`);
+        }
+      }
+    } catch (error) {
+      logger.error(`Error while cleaning expired data from ${this.dataFolderPath}: ${error}`);
+      throw new CacheDataError(`Error while cleaning expired data from ${this.dataFolderPath}: ${error}`);
+    }
+  }
+
   private async savePrepareDataFolder() {
     try {
       const rootFolderCanBeUsedForCache = await this.rootFolderCanBeUsedForCache();
@@ -127,7 +157,7 @@ export class DataBaseRepository {
         throw new Error(`Directory ${this.rootFolderPath} is not empty. Please delete all files from it`);
       }
       await mkdirPromise(this.dataFolderPath, { recursive: true });
-      await writeFilePromise(path.join(this.rootFolderPath, CACHE_GUARD_FILE), 'is database folder', 'utf8');
+      await writeFilePromise(path.join(this.rootFolderPath, CACHE_GUARD_FILE), 'is database folder');
     } catch (error) {
       logger.error(`Error while saving data folder ${this.dataFolderPath}: ${error}`);
       throw new CacheDataError(`Error while saving data folder ${this.dataFolderPath}: ${error}`);

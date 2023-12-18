@@ -61,6 +61,8 @@ module.exports = {
         accessorPairPositioning: 'getThenSet',
       },
     ],
+    'no-await-in-loop': 'off',
+    'no-continue': 'off',
     'lines-between-class-members': [
       'error',
       {

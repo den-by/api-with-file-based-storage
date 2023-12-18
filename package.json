@@ -21,21 +21,22 @@
   },
   "license": "MIT",
   "devDependencies": {
+    "@faker-js/faker": "^8.3.1",
     "@types/benchmark": "^2.1.5",
     "@types/node": "^20.10.4",
-    "benchmark": "^2.1.4",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.3.3",
-    "eslint": "^8.56.0",
     "@typescript-eslint/eslint-plugin": "^6.14.0",
     "@typescript-eslint/parser": "^6.14.0",
+    "benchmark": "^2.1.4",
+    "eslint": "^8.56.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^3.6.1",
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-prettier": "^5.0.1",
     "eslint-plugin-sort-class-members": "^1.19.0",
-    "prettier": "^3.1.1"
+    "prettier": "^3.1.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
   },
   "dependencies": {
     "@types/async-retry": "^1.4.8",
